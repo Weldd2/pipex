@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoinemura <antoinemura@student.42.fr>    +#+  +:+       +#+        */
+/*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/19 20:59:23 by antoinemura      ###   ########.fr       */
+/*   Updated: 2024/05/20 01:34:07 by amura            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,11 +85,14 @@ void	create_procs(t_list *procs, char **env)
 		return ;
 	pid = fork_input_output(((t_process *)procs->content)->stdin_fd, ((t_process *)procs->content)->stdout_fd);
 	if (pid != 0)
-		create_procs(procs->next, env);
-	if (pid == 0)
 	{
-		exec_command(((t_process *)(procs->content))->command, env);
+		close(((t_process *)procs->content)->stdin_fd);
+		close(((t_process *)procs->content)->stdout_fd);
+		create_procs(procs->next, env);
 	}
+	if (pid == 0)
+		exec_command(((t_process *)(procs->content))->command, env);
+	
 }
 
 void	handle_files(t_list *list, char **argv)
