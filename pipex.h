@@ -6,7 +6,7 @@
 /*   By: antoinemura <antoinemura@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 14:35:07 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/18 22:06:04 by antoinemura      ###   ########.fr       */
+/*   Updated: 2024/05/20 01:39:15 by antoinemura      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,4 +25,5 @@ typedef struct s_process
 	char	**args;
 	int		stdout_fd;
 	int		stdin_fd;
+	int		pid;
 }	t_process;

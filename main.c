@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
+/*   By: antoinemura <antoinemura@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/20 01:34:07 by amura            ###   ########.fr       */
+/*   Updated: 2024/05/20 02:18:02 by antoinemura      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,66 +24,59 @@ char	**get_all_path(char **env)
 	return (path);
 }
 
-int	exec_command(char *command, char **env)
+void	exec_command(t_process *proc, char **env)
 {
 	char	**path;
-	char	**cmd_args;
 	char	*full_path;
-	char	*cmd_with_path;
-	int		ret;
 
 	path = get_all_path(env);
-	cmd_args = ft_split(command, ' ');
-	ret = 0;
-	write(STDERR_FILENO, "command\n", 9);
+	execve(proc->command, proc->args, env);
 	while (path && *path != NULL)
 	{
 		full_path = ft_strjoin(*path, "/");
-		cmd_with_path = ft_strjoin(full_path, cmd_args[0]);
-		ret = execve(cmd_with_path, cmd_args, env);
+		execve(proc->command, proc->args, env);
 		free(full_path);
-		free(cmd_with_path);
-		if (ret != -1)
-		{
-			ft_freetab((void **)cmd_args);
-			return (1);
-		}
 		path++;
 	}
-	ft_freetab((void **)cmd_args);
-	exit(127);
 }
 
-int	fork_input_output(int fd_in, int fd_out)
+int	fork_input_output(t_process *proc)
 {
 	int		pid;
 
 	pid = fork();
+	proc->pid = pid;
 	if (pid == 0)
 	{
-		if (fd_in != STDIN_FILENO)
+		if (proc->stdin_fd != STDIN_FILENO)
 		{
-			dup2(fd_in, STDIN_FILENO);
-			close(fd_in);
+			dup2(proc->stdin_fd, STDIN_FILENO);
+			close(proc->stdin_fd);
 		}
-		if (fd_out != STDOUT_FILENO)
+		if (proc->stdout_fd != STDOUT_FILENO)
 		{
-			dup2(fd_out, STDOUT_FILENO);
-			close(fd_out);
+			dup2(proc->stdout_fd, STDOUT_FILENO);
+			close(proc->stdout_fd);
 		}
 	}
 	return (pid);
 }
 
+void	free_t_process(void *t_proc)
+{
+	close(((t_process *)t_proc)->stdout_fd);
+	close(((t_process *)t_proc)->stdin_fd);
+	ft_freetab((void **)(((t_process *)t_proc)->args));
+	ft_free((void *)&t_proc);
+}
+
 void	create_procs(t_list *procs, char **env)
 {
 	int	pid;
-	static int c = 0;
 
-	c++;
-	if (procs == NULL || (c > 5))
+	if (procs == NULL)
 		return ;
-	pid = fork_input_output(((t_process *)procs->content)->stdin_fd, ((t_process *)procs->content)->stdout_fd);
+	pid = fork_input_output(procs->content);
 	if (pid != 0)
 	{
 		close(((t_process *)procs->content)->stdin_fd);
@@ -91,8 +84,13 @@ void	create_procs(t_list *procs, char **env)
 		create_procs(procs->next, env);
 	}
 	if (pid == 0)
-		exec_command(((t_process *)(procs->content))->command, env);
-	
+	{
+		ft_lstclear(&(procs->next), free_t_process);
+		exec_command((procs->content), env);
+		ft_lstdelone(procs, free_t_process);
+		write(STDERR_FILENO, "Command not found\n", 19);
+		exit(127);
+	}
 }
 
 void	handle_files(t_list *list, char **argv)
@@ -144,12 +142,15 @@ void	pipe_proc_struct(t_list *list)
 t_process	*create_proc_struct(char *argv)
 {
 	t_process	*proc;
+	char		**command_with_args;
 
 	proc = ft_calloc(sizeof(t_process), 1);
-	proc->command = argv;
-	proc->args = NULL;
+	command_with_args = ft_split(argv, ' ');
+	proc->command = command_with_args[0];
+	proc->args = command_with_args;
 	proc->stdin_fd = -1;
 	proc->stdout_fd = -1;
+	proc->pid = -1;
 	return (proc);
 }
 
@@ -158,12 +159,10 @@ int	main(int argc, char **argv, char **env)
 	t_list		*procs;
 	t_process	*proc;
 	int			i;
+	int			ret;
 
 	if (argc != 5)
-	{
-		ft_printf("Usage: %s <inputf> <cmd1> <cmd2> <outputf>\n", argv[0]);
-		return (1);
-	}
+		return (ft_printf("Usage: %s <inputf> <cmd1> <cmd2> <outputf>\n", argv[0]), 1);
 	procs = NULL;
 	i = 2;
 	while (i < argc - 1)
@@ -175,5 +174,10 @@ int	main(int argc, char **argv, char **env)
 	handle_files(procs, argv);
 	pipe_proc_struct(procs);
 	create_procs(procs, env);
-	return (0);
+	while (procs->next != NULL)
+	{
+		waitpid(((t_process *)procs->content)->pid, &ret, 0);
+		procs = procs->next;
+	}
+	return (WEXITSTATUS(ret));
 }
