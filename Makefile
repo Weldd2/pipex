@@ -1,5 +1,5 @@
 NAME = pipex
-CC = gcc
+CC = cc
 CFLAGS = -Wall -Wextra -Werror -g
 
 LIBFT_DIR = libft
@@ -37,4 +37,4 @@ re: fclean all
 run: all
 	$(MAKE) clean
 	clear
-	./pipex input.txt "grep test" "sort" "uniq" output.txt
+	./pipex input.txt "cat" "sort" "wc -l" output.txt

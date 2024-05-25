@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipex.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoinemura <antoinemura@student.42.fr>    +#+  +:+       +#+        */
+/*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/25 15:30:34 by antoinemura      ###   ########.fr       */
+/*   Updated: 2024/05/25 23:53:59 by amura            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,26 +14,30 @@
 
 void	create_procs(t_list *procs, char **env)
 {
-	int	pid;
+	t_list	*current;
+	int 	pid;
 
-	if (procs == NULL)
-		return ;
-	pid = fork_input_output(procs->content);
-	if (pid != 0)
+	current = procs;
+	while (current != NULL)
 	{
-		close(((t_process *)procs->content)->stdin_fd);
-		close(((t_process *)procs->content)->stdout_fd);
-		create_procs(procs->next, env);
-	}
-	if (pid == 0)
-	{
-		ft_lstclear(&(procs->next), free_t_process);
-		exec_command((procs->content), env);
-		ft_lstdelone(procs, free_t_process);
-		write(STDERR_FILENO, "Command not found\n", 19);
-		exit(127);
+		pid = fork_input_output(current->content);
+		if (pid != 0)
+		{
+			close(((t_process *)current->content)->stdin_fd);
+			close(((t_process *)current->content)->stdout_fd);
+			current = current->next;
+		}
+		else if (pid == 0)
+		{
+			ft_lstclear(&(current->next), free_t_process);
+			exec_command((current->content), env);
+			ft_lstclear(&procs, free_t_process);
+			write(STDERR_FILENO, "Command not found\n", 19);
+			exit(127);
+		}
 	}
 }
+
 
 void	handle_files(t_list *list, char **argv)
 {
@@ -90,6 +94,8 @@ t_process	*create_proc_struct(char *argv)
 
 	proc = ft_calloc(sizeof(t_process), 1);
 	command_with_args = ft_split(argv, ' ');
+	if (command_with_args[0] == NULL)
+		return (ft_freetab((void **)command_with_args), free(proc), NULL);
 	proc->command = command_with_args[0];
 	proc->args = command_with_args;
 	proc->stdin_fd = -1;
@@ -112,16 +118,15 @@ int	main(int argc, char **argv, char **env)
 	while (i < argc - 1)
 	{
 		proc = create_proc_struct(argv[i]);
+		if (proc == NULL)
+			return (ft_lstclear(&procs, free_t_process), 2);
 		ft_lstadd_back(&procs, ft_lstnew(proc));
 		i++;
 	}
 	handle_files(procs, argv);
 	pipe_proc_struct(procs);
 	create_procs(procs, env);
-	while (procs->next != NULL)
-	{
-		waitpid(((t_process *)procs->content)->pid, &ret, 0);
-		procs = procs->next;
-	}
+	ret = wait_procs(procs);
+	ft_lstclear(&procs, free_t_process);
 	return (WEXITSTATUS(ret));
 }

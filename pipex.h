@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipex.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoinemura <antoinemura@student.42.fr>    +#+  +:+       +#+        */
+/*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 14:35:07 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/25 15:30:20 by antoinemura      ###   ########.fr       */
+/*   Updated: 2024/05/25 22:53:36 by amura            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,5 +39,6 @@ void		free_t_process(void *t_proc);
 void		handle_files(t_list *list, char **argv);
 void		pipe_proc_struct(t_list *list);
 t_process	*create_proc_struct(char *argv);
+int			wait_procs(t_list *procs);
 
 #endif
