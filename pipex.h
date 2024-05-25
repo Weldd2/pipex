@@ -6,7 +6,7 @@
 /*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 14:35:07 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/26 00:14:04 by amura            ###   ########.fr       */
+/*   Updated: 2024/05/26 01:21:18 by amura            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ void		exec_command(t_process *proc, char **env);
 int			fork_input_output(t_process *proc);
 void		free_t_process(void *t_proc);
 int			handle_files(t_list *list, char **argv);
-void		pipe_proc_struct(t_list *list);
+int			pipe_proc_struct(t_list *list);
 t_process	*create_proc_struct(char *argv);
 int			wait_procs(t_list *procs);
 

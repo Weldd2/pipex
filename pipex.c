@@ -6,7 +6,7 @@
 /*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/26 00:31:24 by amura            ###   ########.fr       */
+/*   Updated: 2024/05/26 01:24:01 by amura            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 void	create_procs(t_list *procs, char **env)
 {
 	t_list	*current;
-	int 	pid;
+	int		pid;
 
 	current = procs;
 	while (current != NULL)
@@ -40,7 +40,6 @@ void	create_procs(t_list *procs, char **env)
 	}
 }
 
-
 int	handle_files(t_list *list, char **argv)
 {
 	t_list	*current;
@@ -63,7 +62,7 @@ int	handle_files(t_list *list, char **argv)
 	return (0);
 }
 
-void	pipe_proc_struct(t_list *list)
+int	pipe_proc_struct(t_list *list)
 {
 	t_list	*current;
 	int		pipefd[2];
@@ -71,7 +70,8 @@ void	pipe_proc_struct(t_list *list)
 	current = list;
 	while (current->next != NULL)
 	{
-		pipe(pipefd);
+		if (pipe(pipefd) == -1)
+			return (-1);
 		if (((t_process *)current->content)->stdout_fd == -1)
 			((t_process *)current->content)->stdout_fd = pipefd[1];
 		else
@@ -82,6 +82,7 @@ void	pipe_proc_struct(t_list *list)
 		else
 			close(pipefd[0]);
 	}
+	return (1);
 }
 
 t_process	*create_proc_struct(char *argv)
@@ -122,7 +123,8 @@ int	main(int argc, char **argv, char **env)
 	}
 	if (handle_files(procs, argv) == 2)
 		return (ft_lstclear(&procs, free_t_process), 2);
-	pipe_proc_struct(procs);
+	if (pipe_proc_struct(procs) == -1)
+		return (ft_lstclear(&procs, free_t_process), perror("pipe"), 2);
 	create_procs(procs, env);
 	ret = wait_procs(procs);
 	ft_lstclear(&procs, free_t_process);
