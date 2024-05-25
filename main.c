@@ -6,7 +6,7 @@
 /*   By: antoinemura <antoinemura@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/20 02:18:02 by antoinemura      ###   ########.fr       */
+/*   Updated: 2024/05/20 03:21:37 by antoinemura      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,10 @@ void	exec_command(t_process *proc, char **env)
 	char	*full_path;
 
 	path = get_all_path(env);
-	execve(proc->command, proc->args, env);
 	while (path && *path != NULL)
 	{
-		full_path = ft_strjoin(*path, "/");
-		execve(proc->command, proc->args, env);
+		full_path = ft_strvjoin(*path, "/", proc->command, NULL);
+		execve(full_path, proc->args, env);
 		free(full_path);
 		path++;
 	}

@@ -37,4 +37,4 @@ re: fclean all
 run: all
 	$(MAKE) clean
 	clear
-	./pipex input.txt "cat" "ex.sh" output.txt
+	./pipex input.txt "cat" "wc -l" output.txt
