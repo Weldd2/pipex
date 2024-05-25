@@ -6,7 +6,7 @@
 /*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/25 23:53:59 by amura            ###   ########.fr       */
+/*   Updated: 2024/05/26 00:14:20 by amura            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ void	create_procs(t_list *procs, char **env)
 }
 
 
-void	handle_files(t_list *list, char **argv)
+int	handle_files(t_list *list, char **argv)
 {
 	t_list	*current;
 	int		fd_input;
@@ -49,21 +49,16 @@ void	handle_files(t_list *list, char **argv)
 	current = list;
 	fd_input = open(argv[1], O_RDONLY);
 	if (fd_input == -1)
-	{
-		perror("open input file");
-		exit(1);
-	}
+		return (perror("open input file"), 2);
 	((t_process *)current->content)->stdin_fd = fd_input;
 	while (current->next != NULL)
 		current = current->next;
 	outputf = argv[ft_lstsize(list) + 2];
 	fd_output = open(outputf, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd_output == -1)
-	{
-		perror("open output file");
-		exit(1);
-	}
+		return (perror("open output file"), 2);
 	((t_process *)current->content)->stdout_fd = fd_output;
+	return (0);
 }
 
 void	pipe_proc_struct(t_list *list)
@@ -123,7 +118,8 @@ int	main(int argc, char **argv, char **env)
 		ft_lstadd_back(&procs, ft_lstnew(proc));
 		i++;
 	}
-	handle_files(procs, argv);
+	if (handle_files(procs, argv) == 2)
+		return (ft_lstclear(&procs, free_t_process), 2);
 	pipe_proc_struct(procs);
 	create_procs(procs, env);
 	ret = wait_procs(procs);
