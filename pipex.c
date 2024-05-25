@@ -6,7 +6,7 @@
 /*   By: amura <amura@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/26 00:14:20 by amura            ###   ########.fr       */
+/*   Updated: 2024/05/26 00:31:24 by amura            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@ void	create_procs(t_list *procs, char **env)
 			ft_lstclear(&(current->next), free_t_process);
 			exec_command((current->content), env);
 			ft_lstclear(&procs, free_t_process);
+			close(0);
+			close(1);
 			write(STDERR_FILENO, "Command not found\n", 19);
 			exit(127);
 		}
