@@ -1,73 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   pipex.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoinemura <antoinemura@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 13:03:30 by antoinemura       #+#    #+#             */
-/*   Updated: 2024/05/20 03:21:37 by antoinemura      ###   ########.fr       */
+/*   Updated: 2024/05/25 15:30:34 by antoinemura      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
-
-char	**get_all_path(char **env)
-{
-	char	**path;
-
-	while (*env && ft_str_start_with(*env, "PATH") != 1)
-		env++;
-	if (!*env)
-		return (NULL);
-	path = ft_split(*env + 5, ':');
-	return (path);
-}
-
-void	exec_command(t_process *proc, char **env)
-{
-	char	**path;
-	char	*full_path;
-
-	path = get_all_path(env);
-	while (path && *path != NULL)
-	{
-		full_path = ft_strvjoin(*path, "/", proc->command, NULL);
-		execve(full_path, proc->args, env);
-		free(full_path);
-		path++;
-	}
-}
-
-int	fork_input_output(t_process *proc)
-{
-	int		pid;
-
-	pid = fork();
-	proc->pid = pid;
-	if (pid == 0)
-	{
-		if (proc->stdin_fd != STDIN_FILENO)
-		{
-			dup2(proc->stdin_fd, STDIN_FILENO);
-			close(proc->stdin_fd);
-		}
-		if (proc->stdout_fd != STDOUT_FILENO)
-		{
-			dup2(proc->stdout_fd, STDOUT_FILENO);
-			close(proc->stdout_fd);
-		}
-	}
-	return (pid);
-}
-
-void	free_t_process(void *t_proc)
-{
-	close(((t_process *)t_proc)->stdout_fd);
-	close(((t_process *)t_proc)->stdin_fd);
-	ft_freetab((void **)(((t_process *)t_proc)->args));
-	ft_free((void *)&t_proc);
-}
 
 void	create_procs(t_list *procs, char **env)
 {
@@ -97,6 +40,7 @@ void	handle_files(t_list *list, char **argv)
 	t_list	*current;
 	int		fd_input;
 	int		fd_output;
+	char	*outputf;
 
 	current = list;
 	fd_input = open(argv[1], O_RDONLY);
@@ -108,7 +52,8 @@ void	handle_files(t_list *list, char **argv)
 	((t_process *)current->content)->stdin_fd = fd_input;
 	while (current->next != NULL)
 		current = current->next;
-	fd_output = open(argv[ft_lstsize(list) + 2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	outputf = argv[ft_lstsize(list) + 2];
+	fd_output = open(outputf, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd_output == -1)
 	{
 		perror("open output file");
@@ -160,8 +105,8 @@ int	main(int argc, char **argv, char **env)
 	int			i;
 	int			ret;
 
-	if (argc != 5)
-		return (ft_printf("Usage: %s <inputf> <cmd1> <cmd2> <outputf>\n", argv[0]), 1);
+	if (argc < 5)
+		return (ft_printf("Usage: %s <inf> <cmd> <cmd> <outf>\n", argv[0]), 1);
 	procs = NULL;
 	i = 2;
 	while (i < argc - 1)

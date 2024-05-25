@@ -8,7 +8,7 @@ PRINTF_DIR = $(LIBFT_DIR)/printf
 LIBFT = $(LIBFT_DIR)/libft.a
 FTPRINTF = $(PRINTF_DIR)/libftprintf.a
 
-SRC = main.c
+SRC = pipex.c pipex_2.c
 OBJ = $(SRC:.c=.o)
 
 all: $(LIBFT) $(FTPRINTF) $(NAME)
@@ -37,4 +37,4 @@ re: fclean all
 run: all
 	$(MAKE) clean
 	clear
-	./pipex input.txt "cat" "wc -l" output.txt
+	./pipex input.txt "grep test" "sort" "uniq" output.txt
